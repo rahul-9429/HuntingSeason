@@ -1,0 +1,31 @@
+import type { ContactFilter, InboxFilter, Writer } from "@/lib/types";
+
+export const queryKeys = {
+  me: ["user", "me"] as const,
+  credits: ["credits"] as const,
+  contacts: ["contacts"] as const,
+  contactList: (type: ContactFilter) => ["contacts", type] as const,
+  contactPicker: ["contact-picker"] as const,
+  threads: ["threads"] as const,
+  threadLists: ["threads", "list"] as const,
+  threadList: (filter: InboxFilter, q: string) => ["threads", "list", { filter, q }] as const,
+  thread: (id: string) => ["threads", "detail", id] as const,
+  profile: ["profile"] as const,
+  experience: ["profile", "experience"] as const,
+  preferences: ["preferences"] as const,
+  resume: ["resume"] as const,
+  careerProfile: ["career-profile"] as const,
+  mailbox: ["mailbox"] as const,
+  outreachSettings: ["outreach", "settings"] as const,
+  emailSendSchedule: ["outreach", "settings", "email-send-schedule"] as const,
+  outreachPreviews: ["outreach", "preview"] as const,
+  outreachPreview: (contactId: string, writer?: Writer, templateId?: number) =>
+    ["outreach", "preview", contactId, { writer, templateId }] as const,
+  templates: ["templates"] as const,
+  companySearches: ["companies", "search"] as const,
+  companySearch: (query: string, useProfile: boolean) => ["companies", "search", query, { useProfile }] as const,
+  jobPostings: (orgId: string, roles: string[]) => ["companies", "job-postings", orgId, roles] as const,
+  apolloCreditsLeft: ["companies", "credits-left"] as const,
+  outreachCompanies: ["outreach", "companies"] as const,
+  huntSettings: ["hunt", "settings"] as const,
+};
