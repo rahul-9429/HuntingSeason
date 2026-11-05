@@ -1,0 +1,101 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - backend/**
+      - .github/workflows/backend.yml
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - backend/**
+      - .github/workflows/backend.yml
+
+jobs:
+  task_lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install mypy==2.4.1
+          python3 -m pip install -r backend/requirements-dev.txt
+
+      - name: Compile - tasks/services/models/db/scripts/tests
+        run: python3 -m compileall backend/tasks/ backend/services/ backend/models/ backend/db/ backend/scripts/ backend/tests/
+
+      - name: MyPy - tasks/services/models/db/scripts/tests
+        run: |
+          status=0
+          for dir in tasks services models db scripts tests; do [ -d "backend/$dir" ] || continue; echo "::group::mypy backend/$dir"; MYPYPATH=backend PYTHONPATH=backend python3 -m mypy --config-file backend/mypy.ini "backend/$dir/" || status=1; echo "::endgroup::"; done
+          exit $status
+
+  api_lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install mypy==2.4.1
+          python3 -m pip install -r backend/requirements.txt
+
+      - name: Compile - api/alembic
+        run: python3 -m compileall backend/api/ backend/alembic/
+
+      - name: MyPy - api/alembic
+        run: |
+          status=0
+          for dir in api alembic; do echo "::group::mypy backend/$dir"; MYPYPATH=backend PYTHONPATH=backend python3 -m mypy --config-file backend/mypy.ini "backend/$dir/" || status=1; echo "::endgroup::"; done
+          exit $status
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: "pip"
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Install dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r backend/requirements-dev.txt
+
+      - name: Pytest
+        working-directory: backend
+        run: python3 -m pytest
